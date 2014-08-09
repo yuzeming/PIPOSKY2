@@ -142,10 +142,10 @@ namespace PIPOSKY2.Models
         }
     } 
 
-    public class HomeworkFormModel
+    public class ContestFormModel
     {
         [Required]
-        [Display(Name = "作业名称")]
+        [Display(Name = "比赛名称")]
         public string HomeworkName { get; set; }
         [Required]
         [Display(Name = "开始时间")]
@@ -153,8 +153,8 @@ namespace PIPOSKY2.Models
         [Required]
         [Display(Name = "结束时间")]
         public DateTime EndTime { get; set; }
-        [Required]
-        public int HomeworkID { get; set; }
+        [Display(Name = "公开注册")]
+        public string canreg { get; set; }
     }
 
     public class UploadProblemFormModel
@@ -165,7 +165,7 @@ namespace PIPOSKY2.Models
         [Required]
         [Display(Name = "文件路径")]
         public HttpPostedFileBase File{ get; set; }
-        [Display(Name = "是否公开")]
+        [Display(Name = "所有人可见")]
         public string visible { get; set; }
     }
 	
