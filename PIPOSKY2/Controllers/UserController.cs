@@ -7,6 +7,9 @@ using PIPOSKY2.Models;
 using System.Data.Entity.Migrations;
 using System.IO;
 using System.Text.RegularExpressions;
+using PIPOSKY2.FormModels;
+using PIPOSKY2.AuthHelper;
+
 namespace PIPOSKY2.Controllers
 {
     public class UserController : Controller

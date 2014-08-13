@@ -4,7 +4,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-namespace PIPOSKY2.Models
+using PIPOSKY2.Models;
+namespace PIPOSKY2.FormModels
 {
     public class LoginFormModel
     {
@@ -88,65 +89,11 @@ namespace PIPOSKY2.Models
         public string ConfirmPassword { get; set; }
     }
 
-    public class CheckinLoginAttribute : ActionFilterAttribute
-    {
-        public override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            if (filterContext.HttpContext.Session["User"] == null)
-            {
-                filterContext.HttpContext.Response.Redirect("/User/Login");
-            }
-        }
-    }
-
-    public class CheckinLogOffAttribute : ActionFilterAttribute
-    {
-        public override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            if (filterContext.HttpContext.Session["User"] != null)
-            {
-                filterContext.HttpContext.Response.Redirect("/User/info");
-            }
-        }
-    }  
-
-    public class CheckAdminAttribute : ActionFilterAttribute
-    {
-        public override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            if (filterContext.HttpContext.Session["User"] == null)
-            {
-                filterContext.HttpContext.Response.Redirect("/User/Login");
-            }
-            User tmp = filterContext.HttpContext.Session["User"] as User;
-            if (tmp.UserType != "admin")
-            {
-                filterContext.HttpContext.Response.Redirect("/User/info");
-            }
-        }
-    }
-
-    public class CheckAdminOrEditorAttribute : ActionFilterAttribute
-    {
-        public override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            if (filterContext.HttpContext.Session["User"] == null)
-            {
-                filterContext.HttpContext.Response.Redirect("/User/Login");
-            }
-            User tmp = filterContext.HttpContext.Session["User"] as User;
-            if ((tmp.UserType != "admin") && (tmp.UserType != "editor"))
-            {
-                filterContext.HttpContext.Response.Redirect("/User/info");
-            }
-        }
-    } 
-
     public class ContestFormModel
     {
         [Required]
         [Display(Name = "比赛名称")]
-        public string HomeworkName { get; set; }
+        public string ContestName { get; set; }
         [Required]
         [Display(Name = "开始时间")]
         public DateTime StartTime { get; set; }
@@ -154,7 +101,13 @@ namespace PIPOSKY2.Models
         [Display(Name = "结束时间")]
         public DateTime EndTime { get; set; }
         [Display(Name = "公开注册")]
-        public string canreg { get; set; }
+        public bool CanReg { get; set; }
+
+        public string Problems { get; set; }
+
+        public List<User> Users { get; set; }
+
+        public string AddUsers { get; set; }
     }
 
     public class UploadProblemFormModel
@@ -166,7 +119,7 @@ namespace PIPOSKY2.Models
         [Display(Name = "文件路径")]
         public HttpPostedFileBase File{ get; set; }
         [Display(Name = "所有人可见")]
-        public string visible { get; set; }
+        public bool visible { get; set; }
     }
 	
 	public class SubmitFormModel

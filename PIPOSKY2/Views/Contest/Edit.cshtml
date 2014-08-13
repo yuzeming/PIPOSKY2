@@ -1,0 +1,67 @@
+﻿@using PIPOSKY2.Models
+@model PIPOSKY2.FormModels.ContestFormModel
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<h2>Create</h2>
+
+@using (Html.BeginForm()) {
+    <div class="form-group">
+        @Html.LabelFor(model => model.ContestName)
+        @Html.EditorFor(model => model.ContestName)
+        @Html.ValidationMessageFor(model => model.ContestName)
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.StartTime)
+        @Html.EditorFor(model => model.StartTime)
+        @Html.ValidationMessageFor(model => model.StartTime)
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.EndTime)
+        @Html.EditorFor(model => model.EndTime)
+        @Html.ValidationMessageFor(model => model.EndTime)
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.CanReg)
+        @Html.EditorFor(model => model.CanReg)
+        @Html.ValidationMessageFor(model => model.CanReg)
+    </div>
+    
+    
+    <div class="form-group">
+        @Html.LabelFor(model => model.Problems)
+        @Html.TextAreaFor(model => model.Problems)
+        @Html.ValidationMessageFor(model => model.Problems)
+    </div>
+    
+    <div class="form-group">
+        @Html.LabelFor(model => model.AddUsers)
+        @Html.TextAreaFor(model => model.AddUsers)
+        @Html.ValidationMessageFor(model => model.AddUsers)
+    </div>
+    
+    <div class="form-group">
+        <h3>现有注册用户</h3>
+        <ul>
+            @if (Model.Users != null)
+            {
+                foreach (var x in Model.Users)
+                {
+                    <li>@x.UserName (@x.UserID)</li>
+                }
+            }
+            else
+            {
+                <li>(没有用户)</li>
+            }
+        </ul>
+    </div>
+    
+   <input type="submit" value="Create" >
+}
+

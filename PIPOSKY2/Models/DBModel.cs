@@ -16,10 +16,17 @@ namespace PIPOSKY2.Models
         public PIPOSKY2DbContext()
             : base("PIPOSKY2DbContext")
         { }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+        }
+
         public DbSet<User> Users { set; get; }
         public DbSet<Problem> Problems { set; get; }
-        public DbSet<Contest> Contest { set; get; }
+        public DbSet<Contest> Contests { set; get; }
 		public DbSet<Submit> Submits { get; set; }
+        public DbSet<ContestRecord> Record { get; set; }
+
     }
 
 	public class DBInitializer : DropCreateDatabaseIfModelChanges<PIPOSKY2DbContext>
@@ -28,10 +35,18 @@ namespace PIPOSKY2.Models
 		{
 			var user = new User {UserEmail = "test@test.com", UserName = "root", UserPwd = "admin123", UserType = "admin", StudentNumber = ""};
 			context.Users.AddOrUpdate(user);
-            context.SaveChanges();
+            
 
+            for (var i = 1; i <= 10; ++i)
+            {
+                var tmp = new Problem { Creator = user, ProblemName = "test " + i.ToString(), Description = "test", Config = "[]", Visible = true, Downloadable = true };
+                context.Problems.AddOrUpdate(tmp);
+            }
+
+            context.SaveChanges();
 			base.Seed(context);
 		}
+
 
 	}
 
@@ -64,7 +79,6 @@ namespace PIPOSKY2.Models
         public virtual User Creator { set; get; }
         [Required]
         public string Description { set; get; }
-        [Required]
         public string Solution { set; get; }
         [Required]
         public string Config { set; get; }
@@ -80,8 +94,20 @@ namespace PIPOSKY2.Models
         public DateTime StartTime { set; get; }
         [Required]
         public DateTime EndTime { set; get; }
-        public virtual ICollection<User> Users { set; get; }
+        public virtual ICollection<ContestRecord> Record { set; get; }
         public virtual ICollection<Problem> Problmems { set; get; }
+    }
+
+    public class ContestRecord
+    {
+        [Key]
+        public int StateID { set; get; }
+        [Required]
+        public virtual Contest Belong { get; set; }
+        [Required]
+        public virtual User User { set; get; }
+        public int Src { get; set; }
+        public string Details { get; set; } // Json
     }
 
 	public class Submit
@@ -92,6 +118,7 @@ namespace PIPOSKY2.Models
 		public string Lang { get; set; }
 		public virtual Problem Prob { get; set; }
 		public virtual User User { get; set; }
+        public virtual ContestRecord Record { get; set; }
 		[Required]
 		public DateTime Time { get; set; }
 
@@ -99,7 +126,7 @@ namespace PIPOSKY2.Models
 		public string Source { get; set; }
 		public string State { get; set; }
         public int Score { get; set; }
-		public string Result { get; set; }
+		public string Result { get; set; } //Json
         public string CompilerRes { get; set; }
 	}
 }

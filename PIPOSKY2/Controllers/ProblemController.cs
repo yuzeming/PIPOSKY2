@@ -14,6 +14,8 @@ using SharpCompress.Archive;
 using PIPOSKY2.Models;
 using System.Data.Entity.Migrations;
 using Newtonsoft.Json.Linq;
+using PIPOSKY2.FormModels;
+using PIPOSKY2.AuthHelper;
 
 namespace PIPOSKY2.Controllers
 {
@@ -36,15 +38,14 @@ namespace PIPOSKY2.Controllers
             Problem problem = new Problem();
             return View(problem);
         }
+
         [HttpPost]
         public ActionResult Upload(UploadProblemFormModel form)
         {
             //实例化对象
             Problem problem = new Problem();
             //题目是否公开
-            if (form.visible == "on")
-                problem.Visible = true;
-            else problem.Visible = false;
+            problem.Visible = form.visible;
             //上传用户
             problem.Creator = db.Users.Find(Session["_UserID"] as int?);
             //获取文件
@@ -82,6 +83,7 @@ namespace PIPOSKY2.Controllers
             Problem problem = db.Problems.Find(id);
             return View(problem);
         }
+
         [HttpPost]
         public ActionResult Edit(int ?id, UploadProblemFormModel form)
         {
@@ -206,12 +208,11 @@ namespace PIPOSKY2.Controllers
             stream.Flush();          
             return true;
         }
+
         public bool DealWithForm(UploadProblemFormModel form, Problem problem)
         {
             //题目是否公开
-            if (form.visible == "on")
-                problem.Visible = true;
-            else problem.Visible = false;
+            problem.Visible = form.visible;
             //上传用户
             problem.Creator = db.Users.Find(Session["_UserID"] as int?);
             //获取文件
@@ -304,15 +305,12 @@ namespace PIPOSKY2.Controllers
         public FileStreamResult DownloadData(int? id)
         {
             Problem problem = db.Problems.Find(id);
-            if (true)
-            {
-                FileStream filestream = new FileStream(Server.MapPath("~/ProblemData/")+problem.ProblemName+".zip",
-                    FileMode.Open, FileAccess.Read, FileShare.None);
-                return File(filestream,
-                    "text/plain", problem.ProblemName + Path.GetExtension(problem.ProblemPath));
-            }
-            else
-                return null;
+
+            FileStream filestream = new FileStream(Server.MapPath("~/ProblemData/")+problem.ProblemName+".zip",
+                FileMode.Open, FileAccess.Read, FileShare.None);
+            return File(filestream,
+                "text/plain", problem.ProblemName + Path.GetExtension(problem.ProblemPath));
+
         }
     }
 }

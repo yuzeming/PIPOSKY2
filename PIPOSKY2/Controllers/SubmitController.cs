@@ -9,6 +9,8 @@ using System.Net.Http;
 using System.Web.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Specialized;
+using PIPOSKY2.FormModels;
+using PIPOSKY2.AuthHelper;
 
 namespace PIPOSKY2.Controllers
 {
@@ -16,6 +18,11 @@ namespace PIPOSKY2.Controllers
     {
 
 		PIPOSKY2DbContext db = new PIPOSKY2DbContext();
+
+        public void UpdateSubmitState(Submit x)
+        {
+
+        }
 
         public ActionResult Details(int id)
         {
@@ -90,6 +97,7 @@ namespace PIPOSKY2.Controllers
                 string x = Request.QueryString["s"];
                 tmp = tmp.Where(_ => _.State == x);
             }
+            
             if (Request.QueryString["rejudge"] == "on")
             {
                 foreach (var i in tmp.ToArray())

@@ -8,6 +8,8 @@ using System.Web.Http;
 using System.Data.Entity;
 using System.Web.Mvc;
 using PIPOSKY2.Models;
+using PIPOSKY2.FormModels;
+using PIPOSKY2.AuthHelper;
 
 namespace PIPOSKY2.Controllers
 {

@@ -1,0 +1,29 @@
+﻿@model PIPOSKY2.Models.Contest
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>@Html.DisplayFor(model => model.ContestName)</h2>
+        
+<span>@Html.DisplayFor(model => model.StartTime) ~ @Html.DisplayFor(model => model.EndTime)</span> 
+
+<table class="table">
+    <tr>
+        <th>题号</th>
+        <th>题目名</th>
+        <th>成绩</th>
+        <th>操作</th>
+    </tr>
+    @foreach(var i in Model.Problmems)
+    {
+        <tr>
+            <td>@i.ProblemID</td>
+            <td>@i.ProblemName</td>
+            <td>!!!</td>
+            <td>@Html.ActionLink("进入", "Content", "Problem", new { id = @i.ProblemID , from = Model.ContestID }, new { })</td>
+        </tr>
+    }
+</table>     
+
+
