@@ -19,9 +19,22 @@ namespace PIPOSKY2.Controllers
 
 		PIPOSKY2DbContext db = new PIPOSKY2DbContext();
 
-        public void UpdateSubmitState(Submit x)
+        public void UpdateSubmitState(Submit x,bool ForceUpdate = false)
         {
-
+            var r = x.Record;
+            if (r == null) return;
+            var res = JsonConvert.DeserializeObject < Dictionary<int, List<Object> > >(r.Details);
+            if (ForceUpdate || (res[x.Prob.ProblemID][0] as int?) == x.SubmitID)
+            {
+                res[x.Prob.ProblemID] = new List<Object> { x.SubmitID, x.Score, x.State };
+                int tot = 0;
+                foreach (var t in res)
+                    tot += t.Value[1] as int? ?? 0 ;
+                r.Src = tot;
+                r.Details = JsonConvert.SerializeObject(res);
+                db.Record.AddOrUpdate(r);
+                db.SaveChanges();
+            }
         }
 
         public ActionResult Details(int id)
@@ -31,15 +44,20 @@ namespace PIPOSKY2.Controllers
 		        return HttpNotFound();
             if (tmp.Result == null || tmp.Result.Length == 0)
                 tmp.Result = "[]";
-            ViewBag.Res = JsonConvert.DeserializeObject<List< List<string> > >(tmp.Result);
+            ViewBag.Res = JsonConvert.DeserializeObject(tmp.Result);
             return View(tmp);
         }
 
         [CheckinLogin]
-        public ActionResult Create(int? id)
+        public ActionResult Create(int? id, string record)
         {
             var tmp =new SubmitFormModel();
             tmp.PID = id;
+            if (!String.IsNullOrWhiteSpace(record))
+            {
+                tmp.RID = Int32.Parse(record);
+                ViewBag.record = db.Record.Find(tmp.RID);
+            }
             return View(tmp);
         }
 
@@ -54,13 +72,16 @@ namespace PIPOSKY2.Controllers
 				Source = info.Source,
 				Time = DateTime.Now,
 				State = "wait",
-				User = db.Users.Find(Session["_UserID"] as int?)
+                Record = db.Record.Find(info.RID),
+				User = db.Users.Find(Session["_UserID"])
 			};
 
 	        if (tmp.Prob == null)
 				ModelState.AddModelError("PID","没有这样的题目");
-            if (tmp.Source == null || tmp.Source.Length == 0)
+            if (String.IsNullOrWhiteSpace(tmp.Source))
                 ModelState.AddModelError("Source", "不能提交空的代码");
+            if (tmp.Record!=null && tmp.Record.User.UserID != (Session["_UserID"] as int?))
+                ModelState.AddModelError("RID", "记录不属于当前用户"); 
 
 	        if (ModelState.IsValid)
 	        {
@@ -70,7 +91,6 @@ namespace PIPOSKY2.Controllers
                 Session["alertetext"] = "提交成功";
                 return RedirectToAction("Details", new { @id = tmp.SubmitID });
 	        }
-
 			return View();
         }
 

@@ -1,11 +1,14 @@
-﻿@model PIPOSKY2.Models.SubmitFormModel
+﻿@model PIPOSKY2.FormModels.SubmitFormModel
 
 @{
     ViewBag.Title = "Create";
 }
 
 <h2>Create</h2>
-
+@if (ViewBag.record !=null)
+{
+    <span>向 @ViewBag.record.Belong.ContestName 提交</span>
+}
 @using (Html.BeginForm()) {
 
     <div class="form-group">
@@ -26,6 +29,8 @@
         @Html.ValidationMessageFor(model => model.Source)
         @Html.TextAreaFor(model => model.Source,new {@class ="form-control",@id="SrcEdit",@rows=30})
     </div>
+    @Html.HiddenFor(model => model.RID)
+    @Html.ValidationMessageFor(model => model.RID)
     <input type="submit" value="Create" class="btn btn-default"/>
 
 }

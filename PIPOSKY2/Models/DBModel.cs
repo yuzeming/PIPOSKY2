@@ -35,14 +35,38 @@ namespace PIPOSKY2.Models
 		{
 			var user = new User {UserEmail = "test@test.com", UserName = "root", UserPwd = "admin123", UserType = "admin", StudentNumber = ""};
 			context.Users.AddOrUpdate(user);
-            
+            context.SaveChanges();
+            var tmpCont = new Contest();
+            var tmpRecord = new ContestRecord();
+            tmpRecord.User = user;
+            tmpRecord.Belong = tmpCont;
+            tmpRecord.Details = "{}";
+            tmpCont.Record = new List<ContestRecord> {tmpRecord};
+            tmpCont.Problmems = new List<Problem>();
+            tmpCont.ContestName = "TEST!!";
+            tmpCont.StartTime = DateTime.Now;
+            tmpCont.EndTime = DateTime.Now.AddDays(1);
 
             for (var i = 1; i <= 10; ++i)
             {
                 var tmp = new Problem { Creator = user, ProblemName = "test " + i.ToString(), Description = "test", Config = "[]", Visible = true, Downloadable = true };
                 context.Problems.AddOrUpdate(tmp);
+                tmpCont.Problmems.Add(tmp);
+                for (var j = 1; j <= i; ++j)
+                {
+                    var x = new Submit();
+                    x.Record = tmpRecord;
+                    x.Prob = tmp;
+                    x.User = user;
+                    x.Source = "aaa";
+                    x.State = "wait";
+                    x.Time = DateTime.Now;
+                    x.Lang = "cpp";
+                    context.Submits.AddOrUpdate(x);
+                }
             }
-
+            context.Contests.AddOrUpdate(tmpCont);
+            context.Record.AddOrUpdate(tmpRecord);
             context.SaveChanges();
 			base.Seed(context);
 		}
@@ -101,7 +125,7 @@ namespace PIPOSKY2.Models
     public class ContestRecord
     {
         [Key]
-        public int StateID { set; get; }
+        public int RecordID { set; get; }
         [Required]
         public virtual Contest Belong { get; set; }
         [Required]

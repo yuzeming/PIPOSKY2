@@ -132,7 +132,10 @@ namespace PIPOSKY2.FormModels
 		[Display(Name="题目ID")]
 		public int? PID { get; set; }
 
-		[Required]
+        [Display(Name = "记录ID")]
+        public int? RID { get; set; }
+		
+        [Required]
 		[Display(Name="提交代码")]
 		public string Source { get; set; }
 	}

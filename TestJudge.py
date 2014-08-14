@@ -4,7 +4,7 @@ import json
 import requests
 import time
 
-url = "http://localhost:61070/api/judge"
+url = "http://localhost:54267/api/judge"
 
 def read_json():
     x = requests.get(url)

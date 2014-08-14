@@ -65,59 +65,50 @@ namespace PIPOSKY2.Controllers
         [CheckinLogOff]
         public ActionResult Login(LoginFormModel currentLogin)
         {
-            try
+            var tmp = db.Users.FirstOrDefault(m => m.UserName == currentLogin.UserName);
+            if (tmp != null)
             {
-                var tmp = db.Users.FirstOrDefault(m => m.UserName == currentLogin.UserName);
-                if (tmp != null)
+                if (tmp.UserPwd != currentLogin.UserPwd)
                 {
-                    if (tmp.UserPwd != currentLogin.UserPwd)
-                    {
-                        ModelState.AddModelError("UserPwd", "密码错误，登陆失败！");
-                        return View();
-                    }
-                    Session["User"] = tmp;
-                    Session["_UserID"] = tmp.UserID;
-                    Session["_UserName"] = tmp.UserName;
-                    Session.Timeout = 10080;
-                    if (currentLogin.KeepLogin)
-                    {
-                        HttpCookie hc = new HttpCookie("_currentUser");
-                        hc["UserID"] = tmp.UserID.ToString();
-                        hc["UserPwd"] = tmp.UserPwd;
-                        hc.Expires = DateTime.Today.AddDays(7);
-                        Response.Cookies.Add(hc);
-                    }
-                    return RedirectToAction("Index", "Courses");
+                    ModelState.AddModelError("UserPwd", "密码错误，登陆失败！");
+                    return View();
                 }
-                ModelState.AddModelError("UserName", "用户名不存在，登陆失败！");
+                Session["User"] = tmp;
+                Session["_UserID"] = tmp.UserID;
+                Session["_UserName"] = tmp.UserName;
+                Session.Timeout = 10080;
+                if (currentLogin.KeepLogin)
+                {
+                    HttpCookie hc = new HttpCookie("_currentUser");
+                    hc["UserID"] = tmp.UserID.ToString();
+                    hc["UserPwd"] = tmp.UserPwd;
+                    hc.Expires = DateTime.Today.AddDays(7);
+                    Response.Cookies.Add(hc);
+                }
+                return RedirectToAction("Index", "Courses");
             }
-            catch { }
+            ModelState.AddModelError("UserName", "用户名不存在，登陆失败！");
             return View();
         }
 
         [CheckinLogOff]
         public ActionResult Login()
         {
-            try
+            string ID = Request.Cookies["_currentUser"]["UserID"].ToString();
+            string pwd = Request.Cookies["_currentUser"]["UserPwd"].ToString();
+            if (ID != null)
             {
-                string ID = Request.Cookies["_currentUser"]["UserID"].ToString();
-                string pwd = Request.Cookies["_currentUser"]["UserPwd"].ToString();
-                if (ID != null)
+                int userid;
+                Int32.TryParse(ID, out userid);
+                User tmp = db.Users.FirstOrDefault(m => m.UserID == userid);
+                if (tmp.UserPwd == pwd)
                 {
-                    int userid;
-                    Int32.TryParse(ID, out userid);
-                    User tmp = db.Users.FirstOrDefault(m => m.UserID == userid);
-                    if (tmp.UserPwd == pwd)
-                    {
-                        Session["User"] = tmp;
-                        Session["_UserName"] = tmp.UserName;
-                        Session["_UserID"] = tmp.UserID;
-                        Session.Timeout = 10080;
-                        return RedirectToAction("Index", "Courses");
-                    }
+                    Session["User"] = tmp;
+                    Session["_UserName"] = tmp.UserName;
+                    Session["_UserID"] = tmp.UserID;
+                    Session.Timeout = 10080;
+                    return RedirectToAction("Index", "Courses");
                 }
-            }
-            catch {
             }
             return View();
         }
@@ -125,14 +116,9 @@ namespace PIPOSKY2.Controllers
         [CheckinLogin]
         public ActionResult Exit() {
             Session.Abandon();
-            try
-            {
-                HttpCookie hc = Request.Cookies["_currentUser"];
-                hc.Expires = DateTime.Now.AddDays(-1);
-                Response.AppendCookie(hc);
-            }
-            catch {
-            }
+            HttpCookie hc = Request.Cookies["_currentUser"];
+            hc.Expires = DateTime.Now.AddDays(-1);
+            Response.AppendCookie(hc);
             return RedirectToAction("Login", "User");
         }
 
@@ -140,36 +126,29 @@ namespace PIPOSKY2.Controllers
         [CheckinLogin]
         public ActionResult EditInfo(EditPersonalInfoModel EditUser)
         {
-            try
+            var tmp = Session["User"] as User;
+            if (EditUser.UserName != null && tmp.UserName != EditUser.UserName && db.Users.Any(_ => _.UserName == EditUser.UserName))
             {
-                var tmp = Session["User"] as User;
-                if (EditUser.UserName != null && tmp.UserName != EditUser.UserName && db.Users.Any(_ => _.UserName == EditUser.UserName))
-                {
-                    ModelState.AddModelError("UserName", "用户名"+EditUser.UserName+"已经存在");
-                }
-                if (EditUser.UserEmail != null && tmp.UserEmail != EditUser.UserEmail && db.Users.Any(_ => _.UserEmail == EditUser.UserEmail))
-                {
-                    ModelState.AddModelError("UserEmail", "Email"+EditUser.UserEmail+"已经存在");
-                }
-                if (ModelState.IsValid)
-                {
-                    tmp.UserEmail = EditUser.UserEmail;
-                    tmp.UserName = EditUser.UserName;
-                    db.Users.AddOrUpdate(tmp);
-                    db.SaveChanges();
-                    Session["User"] = tmp;
-                    Session["_UserID"] = tmp.UserID;
-                    Session["_UserName"] = tmp.UserName;
-                    Session["alertetype"] = "success";
-                    Session["alertetext"] = "保存个人信息成功";
-                    return RedirectToAction("info", "User");
-                }
+                ModelState.AddModelError("UserName", "用户名"+EditUser.UserName+"已经存在");
             }
-            catch {
-                Session["alertetype"] = "warning";
-                Session["alertetext"] = "保存个人信息失败";
+            if (EditUser.UserEmail != null && tmp.UserEmail != EditUser.UserEmail && db.Users.Any(_ => _.UserEmail == EditUser.UserEmail))
+            {
+                ModelState.AddModelError("UserEmail", "Email"+EditUser.UserEmail+"已经存在");
+            }
+            if (ModelState.IsValid)
+            {
+                tmp.UserEmail = EditUser.UserEmail;
+                tmp.UserName = EditUser.UserName;
+                db.Users.AddOrUpdate(tmp);
+                db.SaveChanges();
+                Session["User"] = tmp;
+                Session["_UserID"] = tmp.UserID;
+                Session["_UserName"] = tmp.UserName;
+                Session["alertetype"] = "success";
+                Session["alertetext"] = "保存个人信息成功";
                 return RedirectToAction("info", "User");
             }
+
             var tmp1 = Session["User"] as User;
             EditPersonalInfoModel Edit = new EditPersonalInfoModel();
             Edit.UserName = tmp1.UserName;
@@ -182,60 +161,49 @@ namespace PIPOSKY2.Controllers
         [CheckinLogin]
         public ActionResult EditInfo()
         {
-            try
-            {
-                var tmp = Session["User"] as User;
-                EditPersonalInfoModel Edit = new EditPersonalInfoModel();
-                Edit.UserName = tmp.UserName;
-                Edit.UserEmail = tmp.UserEmail;
-                return View(Edit);
-            }
-            catch { }
-            Session["alertetype"] = "warning";
-            Session["alertetext"] = "修改个人信息失败";
-            return RedirectToAction("info", "User");
+
+            var tmp = Session["User"] as User;
+            EditPersonalInfoModel Edit = new EditPersonalInfoModel();
+            Edit.UserName = tmp.UserName;
+            Edit.UserEmail = tmp.UserEmail;
+            return View(Edit);
         }
 
         [HttpPost]
         [CheckinLogin]
         public ActionResult EditPwd(ChangePasswordModel EditPwd)
         {
-            try
+
+            var tmp = Session["User"] as User;
+            if (tmp.UserPwd != EditPwd.OldPassword)
             {
-                var tmp = Session["User"] as User;
-                if (tmp.UserPwd != EditPwd.OldPassword)
-                {
-                    ModelState.AddModelError("OldPassword", "原密码错误！");
-                    return View();
-                }
-                if (EditPwd.NewPassword != EditPwd.ConfirmPassword)
-                {
-                    ModelState.AddModelError("ConfirmPassword", "新密码不匹配！");
-                }
-                if (ModelState.IsValid)
-                {
-                    tmp.UserPwd = EditPwd.NewPassword;
-                    db.Users.AddOrUpdate(tmp);
-                    db.SaveChanges();
-
-                    Session["User"] = tmp;
-
-                    if (Request.Cookies["_currentUser"] != null)
-                    {
-                        string userID = Request.Cookies["_currentUser"]["UserID"].ToString();
-                        HttpCookie hc = new HttpCookie("_currentUser");
-                        hc["UserPwd"] = tmp.UserPwd;
-                        Response.Cookies.Add(hc);
-                    }
-                    Session["alertetype"] = "success";
-                    Session["alertetext"] = "保存密码成功";
-                    return RedirectToAction("info", "User");
-                }
+                ModelState.AddModelError("OldPassword", "原密码错误！");
+                return View();
             }
-            catch {
-                Session["alertetype"] = "warning";
-                Session["alertetext"] = "保存密码失败";
+            if (EditPwd.NewPassword != EditPwd.ConfirmPassword)
+            {
+                ModelState.AddModelError("ConfirmPassword", "新密码不匹配！");
             }
+            if (ModelState.IsValid)
+            {
+                tmp.UserPwd = EditPwd.NewPassword;
+                db.Users.AddOrUpdate(tmp);
+                db.SaveChanges();
+
+                Session["User"] = tmp;
+
+                if (Request.Cookies["_currentUser"] != null)
+                {
+                    string userID = Request.Cookies["_currentUser"]["UserID"].ToString();
+                    HttpCookie hc = new HttpCookie("_currentUser");
+                    hc["UserPwd"] = tmp.UserPwd;
+                    Response.Cookies.Add(hc);
+                }
+                Session["alertetype"] = "success";
+                Session["alertetext"] = "保存密码成功";
+                return RedirectToAction("info", "User");
+            }
+
             return View();
         }
 
@@ -250,27 +218,22 @@ namespace PIPOSKY2.Controllers
         {
             var tmpPage = db.Users.AsQueryable();                            // tmp是数据库查询
             int PAGE_SIZE = 20;  
-            try
-            {                                                          //每页显示条目
-                int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
-                if (Request.QueryString["page"] == null && Session["_PageNum"] != null)
-                {
-                    page = (int)Session["_PageNum"];
-                }
-                else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                {
-                    Session["_PageNum"] = null;
-                    Session["_EditUserTypeID"] = -1;
-                    Session["_EditStuNumID"] = -1;
-                    Int32.TryParse(Request.QueryString["page"], out page);
-                }
-                ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
-                tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
-                // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                return View(tmpPage.ToList());
+                                                     //每页显示条目
+            int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
+            if (Request.QueryString["page"] == null && Session["_PageNum"] != null)
+            {
+                page = (int)Session["_PageNum"];
             }
-            catch { }
-            tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip(0).Take(PAGE_SIZE); 
+            else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
+            {
+                Session["_PageNum"] = null;
+                Session["_EditUserTypeID"] = -1;
+                Session["_EditStuNumID"] = -1;
+                Int32.TryParse(Request.QueryString["page"], out page);
+            }
+            ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
+            tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
+            // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
             return View(tmpPage.ToList());
         }
 
@@ -278,205 +241,195 @@ namespace PIPOSKY2.Controllers
         [CheckAdmin]
         public ActionResult AdministrateUsers(FormCollection info)
         {
-            try
+
+            if (info["edittype"] != null)
             {
-                if (info["edittype"] != null)
+                try
                 {
-                    try
-                    {
-                        int userid = (int)Session["_EditUserTypeID"];
-                        User tmp = db.Users.FirstOrDefault(_ => _.UserID == userid);
-                        tmp.UserType = info["edittype"];
-                        db.Users.AddOrUpdate(tmp);
-                        db.SaveChanges();
-                        Session["_EditUserTypeID"] = -1;
-                    }
-                    catch
-                    {
-                        ModelState.AddModelError("ErrorMessage", "保存用户类型失败，请再次修改。");
-                        var tmpPage = db.Users.AsQueryable();                            // tmp是数据库查询
-                        int PAGE_SIZE = 20;                                                           //每页显示条目
-                        int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
-                        if (Session["_PageNum"] != null)
-                        {
-                            page = (int)Session["_PageNum"];
-                            Session["_PageNum"] = null;
-                        }
-                        else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                        {
-                            Int32.TryParse(Request.QueryString["page"], out page);
-                        }
-                        ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
-                        tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
-                        // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                        return View(tmpPage.ToList());
-                    }
+                    int userid = (int)Session["_EditUserTypeID"];
+                    User tmp = db.Users.FirstOrDefault(_ => _.UserID == userid);
+                    tmp.UserType = info["edittype"];
+                    db.Users.AddOrUpdate(tmp);
+                    db.SaveChanges();
+                    Session["_EditUserTypeID"] = -1;
                 }
-                if (info["item.StudentNumber"] != null)
+                catch
                 {
-                    if (info["item.StudentNumber"].Length != 10) {
-                        ModelState.AddModelError("ErrorMessage", "学号格式错误，请再次修改。");
-                        var tmpPage1 = db.Users.AsQueryable();                            // tmp是数据库查询
-                        int PAGE_SIZE1 = 20;                                                           //每页显示条目
-                        int page1 = 1, totpage1 = (tmpPage1.Count() + PAGE_SIZE1 - 1) / PAGE_SIZE1;  //计算总页数
-                        if (Session["_PageNum"] != null)
-                        {
-                            page1 = (int)Session["_PageNum"];
-                            Session["_PageNum"] = null;
-                        }
-                        else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                        {
-                            Int32.TryParse(Request.QueryString["page"], out page1);
-                        }
-                        ViewBag.page = page1; ViewBag.totpage = totpage1;  //数据传递给ViewBag
-                        tmpPage1 = tmpPage1.OrderBy(_ => _.UserID).Skip((page1 - 1) * PAGE_SIZE1).Take(PAGE_SIZE1);
-                        // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                        return View(tmpPage1.ToList());
-                    }
-                    try
+                    ModelState.AddModelError("ErrorMessage", "保存用户类型失败，请再次修改。");
+                    var tmpPage = db.Users.AsQueryable();                            // tmp是数据库查询
+                    int PAGE_SIZE = 20;                                                           //每页显示条目
+                    int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
+                    if (Session["_PageNum"] != null)
                     {
-                        int stuNumID = (int)Session["_EditStuNumID"];
-                        User tmp1 = db.Users.FirstOrDefault(_ => _.UserID == stuNumID);
-                        tmp1.StudentNumber = info["item.StudentNumber"];
-                        db.Users.AddOrUpdate(tmp1);
-                        db.SaveChanges();
-                        Session["_EditStuNumID"] = -1;
+                        page = (int)Session["_PageNum"];
+                        Session["_PageNum"] = null;
                     }
-                    catch
+                    else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
                     {
-                        ModelState.AddModelError("ErrorMessage", "保存学号失败，请再次修改。");
-                        var tmpPage1 = db.Users.AsQueryable();                            // tmp是数据库查询
-                        int PAGE_SIZE1 = 20;                                                           //每页显示条目
-                        int page1 = 1, totpage1 = (tmpPage1.Count() + PAGE_SIZE1 - 1) / PAGE_SIZE1;  //计算总页数
-                        if (Session["_PageNum"] != null)
-                        {
-                            page1 = (int)Session["_PageNum"];
-                            Session["_PageNum"] = null;
-                        }
-                        else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                        {
-                            Int32.TryParse(Request.QueryString["page"], out page1);
-                        }
-                        ViewBag.page = page1; ViewBag.totpage = totpage1;  //数据传递给ViewBag
-                        tmpPage1 = tmpPage1.OrderBy(_ => _.UserID).Skip((page1 - 1) * PAGE_SIZE1).Take(PAGE_SIZE1);
-                        // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                        return View(tmpPage1.ToList());
+                        Int32.TryParse(Request.QueryString["page"], out page);
                     }
+                    ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
+                    tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
+                    // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
+                    return View(tmpPage.ToList());
                 }
-                var tmpPage2 = db.Users.AsQueryable();                            // tmp是数据库查询
-                int PAGE_SIZE2 = 20;                                                           //每页显示条目
-                int page2 = 1, totpage2 = (tmpPage2.Count() + PAGE_SIZE2 - 1) / PAGE_SIZE2;  //计算总页数
-                if (Session["_PageNum"] != null)
-                {
-                    page2 = (int)Session["_PageNum"];
-                    Session["_PageNum"] = null;
-                }
-                else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                {
-                    Int32.TryParse(Request.QueryString["page"], out page2);
-                }
-                ViewBag.page = page2; ViewBag.totpage = totpage2;  //数据传递给ViewBag
-                tmpPage2 = tmpPage2.OrderBy(_ => _.UserID).Skip((page2 - 1) * PAGE_SIZE2).Take(PAGE_SIZE2);
-                // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                return View(tmpPage2.ToList());
             }
-            catch { }
-            var tmpPageX = db.Users.AsQueryable();  
-            tmpPageX = tmpPageX.OrderBy(_ => _.UserID).Skip(0).Take(20);
-            return View(tmpPageX.ToList());
+            if (info["item.StudentNumber"] != null)
+            {
+                if (info["item.StudentNumber"].Length != 10) {
+                    ModelState.AddModelError("ErrorMessage", "学号格式错误，请再次修改。");
+                    var tmpPage1 = db.Users.AsQueryable();                            // tmp是数据库查询
+                    int PAGE_SIZE1 = 20;                                                           //每页显示条目
+                    int page1 = 1, totpage1 = (tmpPage1.Count() + PAGE_SIZE1 - 1) / PAGE_SIZE1;  //计算总页数
+                    if (Session["_PageNum"] != null)
+                    {
+                        page1 = (int)Session["_PageNum"];
+                        Session["_PageNum"] = null;
+                    }
+                    else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
+                    {
+                        Int32.TryParse(Request.QueryString["page"], out page1);
+                    }
+                    ViewBag.page = page1; ViewBag.totpage = totpage1;  //数据传递给ViewBag
+                    tmpPage1 = tmpPage1.OrderBy(_ => _.UserID).Skip((page1 - 1) * PAGE_SIZE1).Take(PAGE_SIZE1);
+                    // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
+                    return View(tmpPage1.ToList());
+                }
+                try
+                {
+                    int stuNumID = (int)Session["_EditStuNumID"];
+                    User tmp1 = db.Users.FirstOrDefault(_ => _.UserID == stuNumID);
+                    tmp1.StudentNumber = info["item.StudentNumber"];
+                    db.Users.AddOrUpdate(tmp1);
+                    db.SaveChanges();
+                    Session["_EditStuNumID"] = -1;
+                }
+                catch
+                {
+                    ModelState.AddModelError("ErrorMessage", "保存学号失败，请再次修改。");
+                    var tmpPage1 = db.Users.AsQueryable();                            // tmp是数据库查询
+                    int PAGE_SIZE1 = 20;                                                           //每页显示条目
+                    int page1 = 1, totpage1 = (tmpPage1.Count() + PAGE_SIZE1 - 1) / PAGE_SIZE1;  //计算总页数
+                    if (Session["_PageNum"] != null)
+                    {
+                        page1 = (int)Session["_PageNum"];
+                        Session["_PageNum"] = null;
+                    }
+                    else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
+                    {
+                        Int32.TryParse(Request.QueryString["page"], out page1);
+                    }
+                    ViewBag.page = page1; ViewBag.totpage = totpage1;  //数据传递给ViewBag
+                    tmpPage1 = tmpPage1.OrderBy(_ => _.UserID).Skip((page1 - 1) * PAGE_SIZE1).Take(PAGE_SIZE1);
+                    // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
+                    return View(tmpPage1.ToList());
+                }
+            }
+            var tmpPage2 = db.Users.AsQueryable();                            // tmp是数据库查询
+            int PAGE_SIZE2 = 20;                                                           //每页显示条目
+            int page2 = 1, totpage2 = (tmpPage2.Count() + PAGE_SIZE2 - 1) / PAGE_SIZE2;  //计算总页数
+            if (Session["_PageNum"] != null)
+            {
+                page2 = (int)Session["_PageNum"];
+                Session["_PageNum"] = null;
+            }
+            else if (Request.QueryString["page"] != null)                        //取出当前显示的页码
+            {
+                Int32.TryParse(Request.QueryString["page"], out page2);
+            }
+            ViewBag.page = page2; ViewBag.totpage = totpage2;  //数据传递给ViewBag
+            tmpPage2 = tmpPage2.OrderBy(_ => _.UserID).Skip((page2 - 1) * PAGE_SIZE2).Take(PAGE_SIZE2);
+            // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
+            return View(tmpPage2.ToList());
+
         }
         
         [HttpPost]
         [CheckAdmin]
         public ActionResult BatchAddUsers(FormCollection form)
         {
-            try
+            //导入csv用户信息文件
+            if (Request.Files.Count == 0)
             {
-                //导入csv用户信息文件
-                if (Request.Files.Count == 0)
+                //Request.Files.Count 文件数为0上传不成功
+                return View();
+            }
+
+            HttpPostedFileBase file = Request.Files[0];
+            if (file.ContentLength == 0)
+            {
+                //文件大小大（以字节为单位）为0时，做一些操作
+                return View();
+            }
+            else
+            {
+                //文件大小不为0
+                //上传文件名不变，保存在服务器上的BatchAddUser文件夹下　　
+                file.SaveAs(Server.MapPath(@"~\") + System.IO.Path.GetFileName(file.FileName));
+            }
+            ViewBag.FileName = System.IO.Path.GetFileName(file.FileName);
+
+            //读取文件内容，并添加用户
+            string UserInfoStr = ReadFile(Server.MapPath(@"~\") + ViewBag.FileName);
+            UserInfoStr = Regex.Replace(UserInfoStr, @"[\n\r]", ",");
+            UserInfoStr = UserInfoStr.TrimEnd((char[])"\n\r".ToCharArray());
+            UserInfoStr = Regex.Replace(UserInfoStr, @"[\t]", " ");
+            userInfo str;
+            int length = UserInfoStr.Length;
+            int numofNewUser = 0;
+            for (int beginIndex = 0; beginIndex < length; )
+            {
+                str = getUserInfo(UserInfoStr, beginIndex);
+                beginIndex = str.beginIndex;
+
+                //验证输入
+                if (str.strU.UserName != null && db.Users.Any(_ => _.UserName == str.strU.UserName))
                 {
-                    //Request.Files.Count 文件数为0上传不成功
+                    ModelState.AddModelError("ErrorMessage", "用户名" + str.strU.UserName + "已经存在");
                     return View();
                 }
-
-                HttpPostedFileBase file = Request.Files[0];
-                if (file.ContentLength == 0)
+                if (str.strU.UserEmail != null && db.Users.Any(_ => _.UserEmail == str.strU.UserEmail))
                 {
-                    //文件大小大（以字节为单位）为0时，做一些操作
+                    ModelState.AddModelError("ErrorMessage", "邮箱" + str.strU.UserEmail + "已经存在");
                     return View();
                 }
-                else
+                if (str.strU.StudentNumber != null && db.Users.Any(_ => _.StudentNumber == str.strU.StudentNumber))
                 {
-                    //文件大小不为0
-                    //上传文件名不变，保存在服务器上的BatchAddUser文件夹下　　
-                    file.SaveAs(Server.MapPath(@"~\") + System.IO.Path.GetFileName(file.FileName));
+                    ModelState.AddModelError("ErrorMessage", "学号" + str.strU.StudentNumber + "已经存在");
+                    return View();
                 }
-                ViewBag.FileName = System.IO.Path.GetFileName(file.FileName);
-
-                //读取文件内容，并添加用户
-                string UserInfoStr = ReadFile(Server.MapPath(@"~\") + ViewBag.FileName);
-                UserInfoStr = Regex.Replace(UserInfoStr, @"[\n\r]", ",");
-                UserInfoStr = UserInfoStr.TrimEnd((char[])"\n\r".ToCharArray());
-                UserInfoStr = Regex.Replace(UserInfoStr, @"[\t]", " ");
-                userInfo str;
-                int length = UserInfoStr.Length;
-                int numofNewUser = 0;
-                for (int beginIndex = 0; beginIndex < length; )
+                if (str.strU.UserPwd == null || str.strU.UserPwd.Length < 6 || str.strU.UserPwd.Length > 20)
                 {
-                    str = getUserInfo(UserInfoStr, beginIndex);
-                    beginIndex = str.beginIndex;
-
-                    //验证输入
-                    if (str.strU.UserName != null && db.Users.Any(_ => _.UserName == str.strU.UserName))
-                    {
-                        ModelState.AddModelError("ErrorMessage", "用户名" + str.strU.UserName + "已经存在");
-                        return View();
-                    }
-                    if (str.strU.UserEmail != null && db.Users.Any(_ => _.UserEmail == str.strU.UserEmail))
-                    {
-                        ModelState.AddModelError("ErrorMessage", "邮箱" + str.strU.UserEmail + "已经存在");
-                        return View();
-                    }
-                    if (str.strU.StudentNumber != null && db.Users.Any(_ => _.StudentNumber == str.strU.StudentNumber))
-                    {
-                        ModelState.AddModelError("ErrorMessage", "学号" + str.strU.StudentNumber + "已经存在");
-                        return View();
-                    }
-                    if (str.strU.UserPwd == null || str.strU.UserPwd.Length < 6 || str.strU.UserPwd.Length > 20)
-                    {
-                        ModelState.AddModelError("ErrorMessage", "密码" + str.strU.UserPwd + "的格式错误");
-                        return View();
-                    }
-                    if (str.strU.UserName == null || str.strU.UserName.Length < 4 || str.strU.UserName.Length > 100)
-                    {
-                        ModelState.AddModelError("ErrorMessage", "用户名" + str.strU.UserName + "的格式错误");
-                        return View();
-                    }
-                    string emailPatern = @"^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$";
-                    if (!Regex.IsMatch(str.strU.UserEmail, emailPatern))
-                    {
-                        ModelState.AddModelError("ErrorMessage", "邮箱" + str.strU.UserEmail + "的格式错误");
-                        return View();
-                    }
-                    if (str.strU.StudentNumber != null && str.strU.StudentNumber.Length != 10)
-                    {
-                        ModelState.AddModelError("ErrorMessage", "学号" + str.strU.StudentNumber + "的格式错误");
-                        return View();
-                    }
-                    if (ModelState.IsValid)
-                    {
-                        var tmp = new User { UserName = str.strU.UserName, UserPwd = str.strU.UserPwd, UserEmail = str.strU.UserEmail, UserType = "normal", StudentNumber = str.strU.StudentNumber };
-                        db.Users.Add(tmp);
-                        db.SaveChanges();
-                        numofNewUser++;
-                    }
+                    ModelState.AddModelError("ErrorMessage", "密码" + str.strU.UserPwd + "的格式错误");
+                    return View();
                 }
-                ModelState.AddModelError("ErrorMessage", "成功添加" + numofNewUser + "名新用户！");
-                return RedirectToAction("AdministrateUsers", "User");
+                if (str.strU.UserName == null || str.strU.UserName.Length < 4 || str.strU.UserName.Length > 100)
+                {
+                    ModelState.AddModelError("ErrorMessage", "用户名" + str.strU.UserName + "的格式错误");
+                    return View();
+                }
+                string emailPatern = @"^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$";
+                if (!Regex.IsMatch(str.strU.UserEmail, emailPatern))
+                {
+                    ModelState.AddModelError("ErrorMessage", "邮箱" + str.strU.UserEmail + "的格式错误");
+                    return View();
+                }
+                if (str.strU.StudentNumber != null && str.strU.StudentNumber.Length != 10)
+                {
+                    ModelState.AddModelError("ErrorMessage", "学号" + str.strU.StudentNumber + "的格式错误");
+                    return View();
+                }
+                if (ModelState.IsValid)
+                {
+                    var tmp = new User { UserName = str.strU.UserName, UserPwd = str.strU.UserPwd, UserEmail = str.strU.UserEmail, UserType = "normal", StudentNumber = str.strU.StudentNumber };
+                    db.Users.Add(tmp);
+                    db.SaveChanges();
+                    numofNewUser++;
+                }
             }
-            catch {
-                return RedirectToAction("BatchAddUsers", "User");
-            }
+            ModelState.AddModelError("ErrorMessage", "成功添加" + numofNewUser + "名新用户！");
+            return RedirectToAction("AdministrateUsers", "User");
+
         }
 
         [CheckAdmin]
@@ -488,20 +441,15 @@ namespace PIPOSKY2.Controllers
         public ActionResult BatchRemoveUsers() {
             var tmpPage = db.Users.AsQueryable();                            // tmp是数据库查询
             int PAGE_SIZE = 20;
-            try
-            {                                                          //每页显示条目
-                int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
-                if (Request.QueryString["page"] != null)                        //取出当前显示的页码
-                {
-                    Int32.TryParse(Request.QueryString["page"], out page);
-                }
-                ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
-                tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
-                // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
-                return View(tmpPage.ToList());
+                                                      //每页显示条目
+            int page = 1, totpage = (tmpPage.Count() + PAGE_SIZE - 1) / PAGE_SIZE;  //计算总页数
+            if (Request.QueryString["page"] != null)                        //取出当前显示的页码
+            {
+                Int32.TryParse(Request.QueryString["page"], out page);
             }
-            catch { }
-            tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip(0).Take(PAGE_SIZE);
+            ViewBag.page = page; ViewBag.totpage = totpage;  //数据传递给ViewBag
+            tmpPage = tmpPage.OrderBy(_ => _.UserID).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE);
+            // 先对数据排序，在取出该页的数据，SubmitID是排序属性，注意前面有一个负号（逆序）
             return View(tmpPage.ToList());
         }
 

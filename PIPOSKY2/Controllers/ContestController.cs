@@ -26,7 +26,14 @@ namespace PIPOSKY2.Controllers
         {
             var tmp = db.Contests.Find(id);
             if (tmp == null) return HttpNotFound();
-            
+            int? uid = Session["_UserID"] as int?;
+            if (uid != null)
+            {
+                var x = db.Record.Single(m => m.Belong.ContestID == id && m.User.UserID == uid);
+                ViewBag.record = x;
+                var json = JsonConvert.DeserializeObject<Dictionary<int, List<Object>>>(x.Details);
+                ViewBag.json = json;
+            }
             return View(tmp);
         }
 
@@ -39,7 +46,6 @@ namespace PIPOSKY2.Controllers
             if (id!=null)
             {
                 var x = db.Contests.Find(id);
-                //db.Entry(x).Collection(m => m.Record).Load();
                 if (x == null) return HttpNotFound();
                 tmp.ContestName = x.ContestName;
                 tmp.StartTime = x.StartTime;
@@ -52,7 +58,6 @@ namespace PIPOSKY2.Controllers
             }
             return View(tmp);
         }
-
 
         [HttpPost]
         public ActionResult Edit(int? id, ContestFormModel form)

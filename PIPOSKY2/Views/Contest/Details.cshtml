@@ -21,7 +21,7 @@
             <td>@i.ProblemID</td>
             <td>@i.ProblemName</td>
             <td>!!!</td>
-            <td>@Html.ActionLink("进入", "Content", "Problem", new { id = @i.ProblemID , from = Model.ContestID }, new { })</td>
+            <td>@Html.ActionLink("进入", "Content", "Problem", new { id = @i.ProblemID , record = ViewBag.record.RecordID }, new { })</td>
         </tr>
     }
 </table>     
