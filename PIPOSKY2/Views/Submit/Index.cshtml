@@ -69,10 +69,10 @@
                 @Html.DisplayFor(modelItem => item.Time)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Prob.ProblemID) ( @Html.DisplayFor(modelItem => item.Prob.ProblemName) )
+                @Html.DisplayFor(modelItem => item.Prob.ProblemName)
                 @if (item.Record != null)
                 {
-                    <span>@item.Record.Belong.ContestName</span>
+                    <span>( @item.Record.Belong.ContestName )</span>
                 }
             </td>
             <td>
@@ -82,7 +82,7 @@
                 @Html.DisplayFor(modelItem => item.Lang)
             </td>
             <td>
-                @Html.ActionLink(item.State, "Details", new { id = item.SubmitID })
+                @Html.ActionLink(item.State.ToString(), "Details", new { id = item.SubmitID })
             </td>
         </tr>
     }

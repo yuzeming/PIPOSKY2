@@ -37,7 +37,6 @@ namespace PIPOSKY2.Controllers
                 }
                 if (ModelState.IsValid)
                 {
-                    //var tmp = new User {UserName = info.UserName, UserPwd = info.UserPwd, UserEmail = info.UserEmail, UserType = "admin"};
                     var tmp = new User { UserName = info.UserName, UserPwd = info.UserPwd, UserEmail = info.UserEmail, UserType = "normal" };
                     db.Users.Add(tmp);
                     db.SaveChanges();

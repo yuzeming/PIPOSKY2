@@ -8,9 +8,11 @@ using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Web;
+using PIPOSKY2.Controllers;
 
 namespace PIPOSKY2.Models
 {
+
     public class PIPOSKY2DbContext : DbContext
     {
         public PIPOSKY2DbContext()
@@ -40,7 +42,6 @@ namespace PIPOSKY2.Models
             var tmpRecord = new ContestRecord();
             tmpRecord.User = user;
             tmpRecord.Belong = tmpCont;
-            tmpRecord.Details = "{}";
             tmpCont.Record = new List<ContestRecord> {tmpRecord};
             tmpCont.Problmems = new List<Problem>();
             tmpCont.ContestName = "TEST!!";
@@ -59,15 +60,17 @@ namespace PIPOSKY2.Models
                     x.Prob = tmp;
                     x.User = user;
                     x.Source = "aaa";
-                    x.State = "wait";
+                    x.State = SubmitState.Waiting;
                     x.Time = DateTime.Now;
                     x.Lang = "cpp";
                     context.Submits.AddOrUpdate(x);
+                    
                 }
             }
             context.Contests.AddOrUpdate(tmpCont);
             context.Record.AddOrUpdate(tmpRecord);
             context.SaveChanges();
+            SubmitController.UpdateSubmitState(context, tmpRecord);
 			base.Seed(context);
 		}
 
@@ -86,6 +89,7 @@ namespace PIPOSKY2.Models
         public string UserEmail { set; get; }
         public string StudentNumber { set; get; }
         public string UserType { set; get; }
+
     }
 
     public class Problem
@@ -130,8 +134,25 @@ namespace PIPOSKY2.Models
         public virtual Contest Belong { get; set; }
         [Required]
         public virtual User User { set; get; }
-        public int Src { get; set; }
-        public string Details { get; set; } // Json
+        public int Score { get; set; }
+
+        public virtual ICollection<Submit> Details { get; set; } 
+    }
+
+    public enum SubmitState
+    {
+        Waiting,
+        Running,
+
+        Accepted,
+        TimeLimitExceeded,
+        MemoryLimitExceeded,
+        WrongAnswer,
+        RuntimeError,
+        OutputLimitExceeded,
+        CompileError,
+        SystemError,
+        ValidatorError,
     }
 
 	public class Submit
@@ -142,13 +163,14 @@ namespace PIPOSKY2.Models
 		public string Lang { get; set; }
 		public virtual Problem Prob { get; set; }
 		public virtual User User { get; set; }
+
         public virtual ContestRecord Record { get; set; }
 		[Required]
 		public DateTime Time { get; set; }
 
 		[Required]
 		public string Source { get; set; }
-		public string State { get; set; }
+        public SubmitState State { get; set; }
         public int Score { get; set; }
 		public string Result { get; set; } //Json
         public string CompilerRes { get; set; }

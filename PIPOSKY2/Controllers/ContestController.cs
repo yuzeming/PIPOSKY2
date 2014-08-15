@@ -26,13 +26,12 @@ namespace PIPOSKY2.Controllers
         {
             var tmp = db.Contests.Find(id);
             if (tmp == null) return HttpNotFound();
-            int? uid = Session["_UserID"] as int?;
-            if (uid != null)
+            int? uid = Session["_UserID"] as int? ?? -1;
+            if (uid != -1)
             {
                 var x = db.Record.Single(m => m.Belong.ContestID == id && m.User.UserID == uid);
                 ViewBag.record = x;
-                var json = JsonConvert.DeserializeObject<Dictionary<int, List<Object>>>(x.Details);
-                ViewBag.json = json;
+                ViewBag.Details = x.Details.GroupBy(m => m.Prob.ProblemID).Select(m => m.OrderByDescending(m1 => m1.SubmitID).Last()).ToDictionary(m => m.Prob.ProblemID);
             }
             return View(tmp);
         }
@@ -102,8 +101,7 @@ namespace PIPOSKY2.Controllers
                         var x = new ContestRecord();
                         x.Belong = tmp;
                         x.User = u;
-                        x.Src = 0;
-                        x.Details = "{}";
+                        x.Score = 0;
                         db.Record.AddOrUpdate(x);
                     }
                 }

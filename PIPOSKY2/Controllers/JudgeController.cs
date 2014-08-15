@@ -22,7 +22,7 @@ namespace PIPOSKY2.Controllers
         public SubmitApiModels Get()
         {
             var ret = new SubmitApiModels();
-            var tmp = db.Submits.FirstOrDefault(_ => _.State == "wait");
+            var tmp = db.Submits.FirstOrDefault(_ => _.State == SubmitState.Waiting);
             if (tmp == null)
                 ret.SubmitID = 0;
             else
@@ -31,8 +31,9 @@ namespace PIPOSKY2.Controllers
                 ret.ProbID = tmp.Prob.ProblemID;
                 ret.Source = tmp.Source;
                 ret.Lang = tmp.Lang;
-	            tmp.State = "run";
+                tmp.State = SubmitState.Running;
 				db.Submits.AddOrUpdate(tmp);
+                SubmitController.UpdateSubmitState(db, tmp.Record);
 	            db.SaveChanges();
             }
             return ret;
@@ -49,6 +50,7 @@ namespace PIPOSKY2.Controllers
                 tmp.Score = value.Score;
                 tmp.CompilerRes = value.CompilerRes;
 			    db.Submits.AddOrUpdate(tmp);
+                SubmitController.UpdateSubmitState(db, tmp.Record);
 			    db.SaveChanges();
 		    }
 	    }

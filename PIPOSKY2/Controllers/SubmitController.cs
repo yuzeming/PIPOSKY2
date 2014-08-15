@@ -19,22 +19,13 @@ namespace PIPOSKY2.Controllers
 
 		PIPOSKY2DbContext db = new PIPOSKY2DbContext();
 
-        public void UpdateSubmitState(Submit x,bool ForceUpdate = false)
+        [NonAction]
+        public static void UpdateSubmitState(PIPOSKY2DbContext db, ContestRecord x)
         {
-            var r = x.Record;
-            if (r == null) return;
-            var res = JsonConvert.DeserializeObject < Dictionary<int, List<Object> > >(r.Details);
-            if (ForceUpdate || (res[x.Prob.ProblemID][0] as int?) == x.SubmitID)
-            {
-                res[x.Prob.ProblemID] = new List<Object> { x.SubmitID, x.Score, x.State };
-                int tot = 0;
-                foreach (var t in res)
-                    tot += t.Value[1] as int? ?? 0 ;
-                r.Src = tot;
-                r.Details = JsonConvert.SerializeObject(res);
-                db.Record.AddOrUpdate(r);
-                db.SaveChanges();
-            }
+            if (x == null) return;  
+            x.Score = x.Details.GroupBy(m => m.Prob.ProblemID).Select(m => m.OrderByDescending(m1 => m1.SubmitID).Last()).Select(m2 => m2.Score).Sum();
+            db.Record.AddOrUpdate(x);
+            db.SaveChanges();
         }
 
         public ActionResult Details(int id)
@@ -71,7 +62,7 @@ namespace PIPOSKY2.Controllers
 				Prob = db.Problems.Find(info.PID),
 				Source = info.Source,
 				Time = DateTime.Now,
-				State = "wait",
+                State = SubmitState.Waiting,
                 Record = db.Record.Find(info.RID),
 				User = db.Users.Find(Session["_UserID"])
 			};
@@ -89,6 +80,7 @@ namespace PIPOSKY2.Controllers
 		        db.SaveChanges();
                 Session["alertetype"] = "success";
                 Session["alertetext"] = "提交成功";
+                UpdateSubmitState(db,tmp.Record);
                 return RedirectToAction("Details", new { @id = tmp.SubmitID });
 	        }
 			return View();
@@ -115,15 +107,16 @@ namespace PIPOSKY2.Controllers
             if (Request.QueryString["s"] != null && Request.QueryString["s"].Length > 0)
             {
                 string x = Request.QueryString["s"];
-                tmp = tmp.Where(_ => _.State == x);
+                tmp = tmp.Where(_ => _.State == (SubmitState)Enum.Parse(typeof(SubmitState),x) );
             }
             
             if (Request.QueryString["rejudge"] == "on")
             {
                 foreach (var i in tmp.ToArray())
                 {
-                    i.State = "wait";
+                    i.State = SubmitState.Waiting;
                     db.Submits.AddOrUpdate(i);
+                    UpdateSubmitState(db, i.Record);
                 }
                 db.SaveChanges();
                 return RedirectToAction("Index");

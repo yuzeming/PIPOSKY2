@@ -20,7 +20,8 @@
         <tr>
             <td>@i.ProblemID</td>
             <td>@i.ProblemName</td>
-            <td>!!!</td>
+            <td>@if (ViewBag.Details.ContainsKey(i.ProblemID))
+                { @ViewBag.Details[i.ProblemID].State } else { <span>"未提交"</span> }</td>
             <td>@Html.ActionLink("进入", "Content", "Problem", new { id = @i.ProblemID , record = ViewBag.record.RecordID }, new { })</td>
         </tr>
     }
