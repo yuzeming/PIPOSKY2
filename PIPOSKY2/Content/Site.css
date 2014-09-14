@@ -76,3 +76,8 @@ textarea {
 .validation-summary-valid {
     display: none;
 }
+
+#logoutForm {
+	display: none;
+	position: fixed;
+}

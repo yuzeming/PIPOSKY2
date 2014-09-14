@@ -65,8 +65,12 @@ namespace PIPOSKY2.AuthHelper
                 filterContext.HttpContext.Response.Redirect("/User/info");
             }
         }
-    } 
+    }
 
+    public class HelpFunc
+    {
+        static void 
+    }
 
 
 }

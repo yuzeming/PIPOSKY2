@@ -34,7 +34,7 @@ namespace PIPOSKY2.Controllers
             if ((tmp == null) || (tmp.UserType != "admin" && tmp.UserType != "editor"))
             {
                 return RedirectToAction("Index", "Problem");
-            }
+            } 
             Problem problem = new Problem();
             return View(problem);
         }
@@ -157,55 +157,6 @@ namespace PIPOSKY2.Controllers
                 return false;
             }
             reader.Dispose();
-            stream.Seek(0, SeekOrigin.Begin);
-            var dataReader = ReaderFactory.Open(stream);
-            while (dataReader.MoveToNextEntry())
-            {
-                filename = dataReader.Entry.FilePath;
-                if (filename.Contains("Data") && !dataReader.Entry.IsDirectory)
-                {
-                    try
-                    {
-                        for (int i = 0; i < data.Length; i++)
-                        {
-                            if (filename.EndsWith("Data/" + data[i]["input"].ToString()))
-                                data[i]["input"] = "true";
-                            else if (filename.EndsWith("Data/" + data[i]["output"].ToString()))
-                                data[i]["output"] = "true";
-                        }
-                    }
-                    catch 
-                    {
-                        ViewBag.mention = "Config文件格式错误！";
-                        return false;
-                    }
-                }
-                else if (filename.Contains("Source") && dataReader.Entry.IsDirectory)
-                {
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        if (data[i]["input"].ToString() != "true" || data[i]["output"].ToString() != "true")
-                        {
-                            ViewBag.mention = "测试数据文件不足！";
-                            return false;
-                        }
-                    }
-                    while (dataReader.MoveToNextEntry() && !dataReader.Entry.IsDirectory)
-                    {
-                        if (!Directory.Exists(Server.MapPath("~/ProblemData")))
-                            Directory.CreateDirectory(Server.MapPath("~/ProblemData"));
-                        if (!Directory.Exists(Server.MapPath("~/ProblemData/"+problem.ProblemName)))
-                            Directory.CreateDirectory(Server.MapPath("~/ProblemData/"+problem.ProblemName));
-                        dataReader.WriteEntryToDirectory(Server.MapPath("~/ProblemData/" + problem.ProblemName), 
-                            ExtractOptions.None | ExtractOptions.Overwrite);
-                    }
-                    if (System.IO.File.Exists(Server.MapPath("~/ProblemData/"+problem.ProblemName+".zip")))
-                        System.IO.File.Delete(Server.MapPath("~/ProblemData/"+problem.ProblemName+".zip"));
-                    ZipFile.CreateFromDirectory(Server.MapPath("~/ProblemData/") + problem.ProblemName,
-                        Server.MapPath("~/ProblemData/"+problem.ProblemName+".zip"));
-                }
-            }       
-            stream.Flush();          
             return true;
         }
 
@@ -254,6 +205,7 @@ namespace PIPOSKY2.Controllers
                 return RedirectToAction("Index");
             return View(db.Problems.ToList());
         }
+
         [HttpPost]
         public ActionResult Delete(FormCollection form)
         {
@@ -298,19 +250,7 @@ namespace PIPOSKY2.Controllers
                 return File(filestream,
                     "text/plain", problem.ProblemName + Path.GetExtension(problem.ProblemPath));
             }
-            else
-                return null;
-        }
-
-        public FileStreamResult DownloadData(int? id)
-        {
-            Problem problem = db.Problems.Find(id);
-
-            FileStream filestream = new FileStream(Server.MapPath("~/ProblemData/")+problem.ProblemName+".zip",
-                FileMode.Open, FileAccess.Read, FileShare.None);
-            return File(filestream,
-                "text/plain", problem.ProblemName + Path.GetExtension(problem.ProblemPath));
-
+            throw new HttpException(404,"没有找到文件");
         }
     }
 }

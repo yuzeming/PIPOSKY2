@@ -20,38 +20,35 @@ namespace PIPOSKY2.Controllers
         [CheckinLogOff]
         public ActionResult Reg(RegFormModel info)
         {
-            try
+
+            //验证输入
+            if (info.UserName != null && db.Users.Any(_ => _.UserName == info.UserName))
             {
-                //验证输入
-                if (info.UserName != null && db.Users.Any(_ => _.UserName == info.UserName))
-                {
-                    ModelState.AddModelError("UserName", "用户名已经存在");
-                }
-                if (info.UserEmail != null && db.Users.Any(_ => _.UserEmail == info.UserEmail))
-                {
-                    ModelState.AddModelError("UserEmail", "Email已经存在");
-                }
-                if (info.UserPwd2 != null && info.UserPwd != info.UserPwd2)
-                {
-                    ModelState.AddModelError("UserPwd2", "两次密码不一致");
-                }
-                if (ModelState.IsValid)
-                {
-                    var tmp = new User { UserName = info.UserName, UserPwd = info.UserPwd, UserEmail = info.UserEmail, UserType = "normal" };
-                    db.Users.Add(tmp);
-                    db.SaveChanges();
-                    tmp = db.Users.FirstOrDefault(m => m.UserName == tmp.UserName);
-                    Session["User"] = tmp;
-                    Session["_UserID"] = tmp.UserID;
-                    Session["_UserName"] = tmp.UserName;
-                    Session["alertetype"] = "success";
-                    Session["alertetext"] = "注册成功";
-                    return RedirectToAction("Index", "Courses");
-                }
-                return View(info);
+                ModelState.AddModelError("UserName", "用户名已经存在");
             }
-            catch{}
-            return View();
+            if (info.UserEmail != null && db.Users.Any(_ => _.UserEmail == info.UserEmail))
+            {
+                ModelState.AddModelError("UserEmail", "Email已经存在");
+            }
+            if (info.UserPwd2 != null && info.UserPwd != info.UserPwd2)
+            {
+                ModelState.AddModelError("UserPwd2", "两次密码不一致");
+            }
+            if (ModelState.IsValid)
+            {
+                var tmp = new User { UserName = info.UserName, UserPwd = info.UserPwd, UserEmail = info.UserEmail, UserType = "normal" };
+                db.Users.Add(tmp);
+                db.SaveChanges();
+                tmp = db.Users.FirstOrDefault(m => m.UserName == tmp.UserName);
+                Session["User"] = tmp;
+                Session["_UserID"] = tmp.UserID;
+                Session["_UserName"] = tmp.UserName;
+                Session["alertetype"] = "success";
+                Session["alertetext"] = "注册成功";
+                SetMassage(Session, "success", "注册成功");
+                return RedirectToAction("Index", "Courses");
+            }
+            return View(info);
         }
 
         [CheckinLogOff]
